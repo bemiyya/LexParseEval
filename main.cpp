@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -6,39 +7,46 @@
 #include "Lexer.h"
 #include "Parser.h"
 
-int main() {
-    while (true) {
-        std::string input, line;
-        std::cout << "\nEnter expression (empty line to run and type \"exit\" to exit):\n";
+using namespace std;
 
-        while (true) {
-            std::getline(std::cin, line);
-            if (line == "exit") return 0;
-            if (line.empty()) break;
-            input += line + " ";
-        }
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        cerr << "Usage: " << argv[0] << " <source_file>\n";
+        return 1;
+    }
 
-        try {
-            Lexer lexer(input);
-            std::vector<Token> tokens = lexer.tokenize();
+    ifstream infile(argv[1]);
+    if (!infile.is_open()) {
+        cerr << "Error opening file: " << argv[1] << "\n";
+        return 1;
+    }
 
-            std::unordered_map<std::string, int> variables;  
-            std::string errorMessage;
+    string input((istreambuf_iterator<char>(infile)),
+                 istreambuf_iterator<char>());
 
-            bool success = parseProgram(tokens, variables, errorMessage);
+    infile.close();
 
-            if (!success) {
-                std::cout << "error" << std::endl;
-            } else {
-                for (const auto& [key, value] : variables) {
-                    std::cout << key << " = " << value << std::endl;
-                }
+    try {
+        Lexer lexer(input);
+        vector<Token> tokens = lexer.tokenize();
+
+        unordered_map<string, int> variables;
+        string errorMessage;
+
+        bool success = parseProgram(tokens, variables, errorMessage);
+
+        if (!success) {
+            cout << "error" << endl;
+        } else {
+            for (const auto& [key, value] : variables) {
+                cout << key << " = " << value << endl;
             }
-
-        } catch (const std::exception& ex) {
-            std::cout << "error" << std::endl;
         }
+
+    } catch (const exception& ex) {
+        cout << "error" << endl;
     }
 
     return 0;
 }
+
